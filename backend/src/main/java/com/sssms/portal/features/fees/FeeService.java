@@ -1,0 +1,102 @@
+package com.sssms.portal.features.fees;
+
+import com.sssms.portal.features.student.Student;
+import com.sssms.portal.features.student.StudentRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class FeeService {
+
+    private final FeeRepository feeRepository;
+    private final StudentRepository studentRepository;
+
+    // 1. Initialize Fee for a Student
+    public void initializeFee(Long studentId, double amount) {
+        Student student = studentRepository.findById(studentId).orElseThrow();
+
+        FeeRecord record = feeRepository.findByStudentId(studentId)
+                .orElse(FeeRecord.builder()
+                        .student(student)
+                        .paidAmount(0)
+                        .build());
+
+        record.setTotalFee(amount);
+        feeRepository.save(record);
+    }
+
+    // 2. Record a Payment
+    @Transactional
+    public void recordPayment(Long studentId, double amount) {
+        FeeRecord record = feeRepository.findByStudentId(studentId)
+                .orElseThrow(() -> new RuntimeException("Fee record not initialized for student"));
+
+        // Calculate new paid amount
+        double newPaidAmount = record.getPaidAmount() + amount;
+
+        // Validation: Ensure paid amount doesn't exceed total fee
+        if (newPaidAmount > record.getTotalFee()) {
+            double remainingBalance = record.getTotalFee() - record.getPaidAmount();
+            throw new RuntimeException(
+                "Cannot record payment of ₹" + amount +
+                ". Total fee is ₹" + record.getTotalFee() +
+                " and already paid amount is ₹" + record.getPaidAmount() +
+                ". Remaining balance is only ₹" + remainingBalance + "."
+            );
+        }
+
+        record.setPaidAmount(newPaidAmount);
+        record.setLastPaymentDate(LocalDateTime.now());
+        feeRepository.save(record);
+    }
+
+    // 2.5. Update Total Fee (Edit Fixed Fee)
+    @Transactional
+    public void updateTotalFee(Long studentId, double newTotalFee) {
+        FeeRecord record = feeRepository.findByStudentId(studentId)
+                .orElseThrow(() -> new RuntimeException("Fee record not initialized for student"));
+
+        // Calculate effective paid amount (paid + scholarship)
+        double effectivePaid = record.getPaidAmount() + record.getScholarshipAmount();
+
+        // Validation: Ensure paid fee is not more than new total fee
+        if (effectivePaid > newTotalFee) {
+            throw new RuntimeException(
+                "Cannot set total fee to ₹" + newTotalFee +
+                ". Student has already paid/received ₹" + effectivePaid +
+                " (₹" + record.getPaidAmount() + " paid + ₹" + record.getScholarshipAmount() + " scholarship)."
+            );
+        }
+
+        record.setTotalFee(newTotalFee);
+        feeRepository.save(record);
+    }
+
+    // 3. Get All Records (For Admin Dashboard)
+    public List<Map<String, Object>> getAllFeeRecords() {
+        return feeRepository.findAll().stream().map(f -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("studentId", f.getStudent().getId()); // User ID
+            map.put("name", f.getStudent().getFirstName() + " " + f.getStudent().getLastName());
+            map.put("prn", f.getStudent().getPrn());
+            map.put("total", f.getTotalFee());
+            map.put("paid", f.getPaidAmount());
+            map.put("scholarshipAmount", f.getScholarshipAmount());
+            double effectiveBalance = f.getTotalFee() - f.getPaidAmount() - f.getScholarshipAmount();
+            map.put("balance", Math.max(effectiveBalance, 0));
+            map.put("status", effectiveBalance <= 0 ? "PAID" : "PENDING");
+            map.put("academicYear", f.getStudent().getAcademicYear() != null ? f.getStudent().getAcademicYear().name() : "N/A");
+            map.put("scholarshipStatus", f.getStudent().getScholarshipStatus() != null
+                    ? f.getStudent().getScholarshipStatus().name() : "NOT_APPLIED");
+            return map;
+        }).collect(Collectors.toList());
+    }
+}

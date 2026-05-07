@@ -1,0 +1,89 @@
+package com.sssms.portal.features.activitylog;
+
+public enum LogAction {
+
+    // Auth
+    LOGIN,
+    LOGOUT,
+    REGISTER,
+    PASSWORD_CHANGED,
+
+    // Student
+    STUDENT_ENROLLED,
+    STUDENT_UPDATED,
+    STUDENT_DELETED,
+    STUDENT_PROFILE_VIEWED,
+
+    // Faculty
+    FACULTY_ENROLLED,
+    FACULTY_DELETED,
+    FACULTY_PROFILE_VIEWED,
+
+    // Subject & Allocation
+    SUBJECT_CREATED,
+    SUBJECT_DELETED,
+    SUBJECT_ALLOCATED,
+    ALLOCATION_REMOVED,
+    COURSE_ASSIGNED,
+    COURSE_REMOVED,
+
+    // Attendance
+    ATTENDANCE_MARKED,
+    ATTENDANCE_REPORT_VIEWED,
+    ATTENDANCE_REPORT_DOWNLOADED,
+
+    // Assessment & Results
+    ASSESSMENT_CREATED,
+    RESULTS_UPLOADED,
+
+    // Fee
+    FEE_INITIALIZED,
+    FEE_PAYMENT_RECORDED,
+    FEE_TOTAL_UPDATED,
+    FEE_REMINDER_CREATED,
+    FEE_REMINDER_DELETED,
+    FEE_REMINDER_DEACTIVATED,
+    SCHOLARSHIP_UPDATED,
+
+    // Notice
+    NOTICE_CREATED,
+
+    // Timetable
+    TIMETABLE_UPLOADED,
+    FACULTY_TIMETABLE_UPLOADED,
+
+    // Exam Schedule
+    EXAM_SCHEDULE_UPLOADED,
+
+    // Schedules
+    COLLEGE_CALENDAR_UPLOADED,
+    COLLEGE_CALENDAR_DELETED,
+    ACADEMIC_SCHEDULE_UPLOADED,
+    ACADEMIC_SCHEDULE_DELETED,
+
+    // Resource
+    RESOURCE_UPLOADED,
+    RESOURCE_DOWNLOADED,
+    RESOURCE_DELETED,
+
+    // Attendance (additional)
+    ATTENDANCE_UPDATED,
+    ATTENDANCE_SESSION_DELETED,
+
+    // Marks
+    MARKS_BATCH_SAVED,
+
+    // Professional Development
+    PD_ENTRY_ADDED,
+    PD_ENTRY_DELETED,
+
+    // GPA
+    GPA_ENTERED,
+    GPA_BATCH_ENTERED,
+
+    // Generic
+    DATA_VIEWED,
+    ERROR,
+    UNKNOWN
+}
+
