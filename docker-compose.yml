@@ -2,24 +2,24 @@ services:
   # 1. MySQL Database
   sssms-db:
     image: mysql:8.0
-    container_name: sssms_mysql
+    container_name: sssms_testing_mysql
     restart: always
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - ./mysql_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s
       retries: 10
 
   # 2. Backend (Spring Boot 4 / Java 25)
   backend:
     build: ./backend
-    container_name: sssms_backend
+    container_name: sssms_testing_backend
     ports:
       - "8080:8080"
     depends_on:
@@ -35,7 +35,7 @@ services:
   # 3. Frontend (React)
   frontend:
     build: ./frontend
-    container_name: sssms_frontend
+    container_name: sssms_testing_frontend
     ports:
       - "5173:5173"
     volumes:
@@ -47,7 +47,7 @@ services:
   # 4. Reverse Proxy (Nginx)
   nginx:
     image: nginx:alpine
-    container_name: sssms_nginx
+    container_name: sssms_testing_nginx
     ports:
       - "80:80"
     volumes:

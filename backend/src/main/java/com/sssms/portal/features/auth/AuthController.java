@@ -1,6 +1,5 @@
 package com.sssms.portal.features.auth;
 
-import com.sssms.portal.security.JwtUtil;
 import com.sssms.portal.features.auth.dto.AuthenticationRequest;
 import com.sssms.portal.features.auth.dto.RegisterRequest;
 import com.sssms.portal.features.auth.dto.ChangePasswordRequest;
@@ -9,10 +8,11 @@ import com.sssms.portal.features.faculty.FacultyRepository;
 import com.sssms.portal.features.student.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +27,6 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService service;
-    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -35,104 +34,77 @@ public class AuthController {
     private final FacultyRepository facultyRepository;
     private final StudentRepository studentRepository;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
-        httpRequest.setAttribute("LOGGED_IN_EMAIL", request.getEmail());
-        service.register(request);
-        return ResponseEntity.ok("User registered successfully");
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request, HttpServletRequest httpRequest) {
-        UserDetails userDetails = service.authenticateForCookie(request);
+
+        // 1. Authenticate the user
+        Authentication authentication = service.authenticateSession(request);
+
+        // 2. Set the authentication in the Spring Security Context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // 3. Create a new Session and save the context
+        HttpSession session = httpRequest.getSession(true);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+
         httpRequest.setAttribute("LOGGED_IN_EMAIL", request.getEmail());
-        httpRequest.setAttribute("LOGGED_IN_ROLE", userDetails.getAuthorities().iterator().next().getAuthority());
-        ResponseCookie jwtCookie = jwtUtil.generateJwtCookie(userDetails);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body("Login successful");
+        httpRequest.setAttribute("LOGGED_IN_ROLE", authentication.getAuthorities().iterator().next().getAuthority());
+
+        // Spring Boot will automatically append the Set-Cookie: JSESSIONID header
+        return ResponseEntity.ok("Session Login successful.");
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        ResponseCookie cleanCookie = jwtUtil.getCleanJwtCookie();
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
-                .body("You've been signed out!");
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        // Destroy the session
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok("You've been signed out and your session was destroyed!");
     }
 
     @GetMapping("/me")
-        public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-            if (userDetails == null) {
-                return ResponseEntity.status(401).body("Not authenticated");
-            }
-
-            // 1. Fetch User Base Data
-            var userOptional = userRepository.findByEmail(userDetails.getUsername());
-
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                Map<String, String> response = new HashMap<>();
-                response.put("email", user.getEmail());
-                response.put("role", "ROLE_" + user.getRole().name());
-                if (user.getProfilePhoto() != null) {
-                    response.put("profilePhoto", user.getProfilePhoto());
-                }
-
-                // 2. Fetch Real Name based on Role
-                String realName = user.getEmail(); // Default fallback
-
-                if (user.getRole() == Role.FACULTY) {
-                    realName = facultyRepository.findById(user.getUserId())
-                            .map(f -> f.getFirstName() + " " + f.getLastName())
-                            .orElse("Faculty Member");
-                } else if (user.getRole() == Role.STUDENT) {
-                    var studentOpt = studentRepository.findById(user.getUserId());
-                    realName = studentOpt.map(s -> s.getFirstName() + " " + s.getLastName()).orElse("Student");
-                    studentOpt.ifPresent(s -> {
-                        if (s.getAcademicYear() != null) {
-                            response.put("currentYear", s.getAcademicYear().name());
-                        }
-                    });
-                } else if (user.getRole() == Role.ADMIN) {
-                    realName = "Administrator";
-                }
-
-                response.put("name", realName);
-                return ResponseEntity.ok(response);
-            } else {
-                ResponseCookie cleanCookie = jwtUtil.getCleanJwtCookie();
-                return ResponseEntity.status(401)
-                        .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
-                        .body("User not found");
-            }
-        }
-
-    @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
 
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Fetch User Base Data
+        var userOptional = userRepository.findByEmail(userDetails.getUsername());
 
-        // Verify current password
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
-            return ResponseEntity.badRequest().body("Current password is incorrect");
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Map<String, String> response = new HashMap<>();
+            response.put("email", user.getEmail());
+            response.put("role", "ROLE_" + user.getRole().name());
+            if (user.getProfilePhoto() != null) {
+                response.put("profilePhoto", user.getProfilePhoto());
+            }
+
+            String realName = user.getEmail();
+
+            if (user.getRole() == Role.FACULTY) {
+                realName = facultyRepository.findById(user.getUserId())
+                        .map(f -> f.getFirstName() + " " + f.getLastName())
+                        .orElse("Faculty Member");
+            } else if (user.getRole() == Role.STUDENT) {
+                var studentOpt = studentRepository.findById(user.getUserId());
+                realName = studentOpt.map(s -> s.getFirstName() + " " + s.getLastName()).orElse("Student");
+                studentOpt.ifPresent(s -> {
+                    if (s.getAcademicYear() != null) {
+                        response.put("currentYear", s.getAcademicYear().name());
+                    }
+                });
+            } else if (user.getRole() == Role.ADMIN) {
+                realName = "Administrator";
+            }
+
+            response.put("name", realName);
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body("User not found");
         }
-
-        // Validate new password
-        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
-            return ResponseEntity.badRequest().body("New password must be at least 6 characters");
-        }
-
-        // Update password
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
-
-        return ResponseEntity.ok("Password changed successfully");
     }
 }
