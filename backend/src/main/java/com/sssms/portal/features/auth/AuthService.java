@@ -16,7 +16,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    // Added this specifically for Session Authentication
     public Authentication authenticateSession(AuthenticationRequest request) {
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
