@@ -15,7 +15,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,7 +26,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    // COMMENTED OUT JWT FILTER FOR SESSION TEST
+    // private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Bean
@@ -48,45 +48,36 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/change-password").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/timetable/view/**", "/api/exams/view/**", "/api/schedules/view/**")
-                        .permitAll()
-                        .requestMatchers("/api/notices/download/**", "/api/resources/download/**",
-                                "/api/resources/view/**")
-                        .permitAll()
+                        .requestMatchers("/api/timetable/view/**", "/api/exams/view/**", "/api/schedules/view/**").permitAll()
+                        .requestMatchers("/api/notices/download/**", "/api/resources/download/**", "/api/resources/view/**").permitAll()
                         .requestMatchers("/api/photos/profile/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Resource Management (upload/delete) - Faculty & Admin only
-                        .requestMatchers(HttpMethod.POST, "/api/resources/upload")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/resources/**")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
+                        // Resource Management
+                        .requestMatchers(HttpMethod.POST, "/api/resources/upload").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
 
-                        // Schedule Management (upload/delete) - Faculty & Admin only
-                        .requestMatchers(HttpMethod.POST, "/api/schedules/upload/**")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/schedules/**")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/status")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/student/me")
-                        .hasAnyAuthority("ROLE_STUDENT", "STUDENT")
+                        // Schedule Management
+                        .requestMatchers(HttpMethod.POST, "/api/schedules/upload/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/schedules/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/status").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/student/me").hasAnyAuthority("ROLE_STUDENT", "STUDENT")
 
-                        // Admin Routes
+                        // Roles
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-
-                        // Faculty Routes
                         .requestMatchers("/api/faculty/profile/me").authenticated()
-                        .requestMatchers("/api/faculty/**")
-                        .hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
-
-                        // Student Routes
+                        .requestMatchers("/api/faculty/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers("/api/student/**").hasAnyAuthority("ROLE_STUDENT", "STUDENT")
 
                         .anyRequest().authenticated())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                // --- CHANGED TO IF_REQUIRED FOR SESSION AUTHENTICATION ---
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
+                .authenticationProvider(authenticationProvider());
+
+                // COMMENTED OUT JWT FILTER ADDITION
+                // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -94,20 +85,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // allowed frontend domains
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost",
-                // add local pc IP address below , find ip using ipconfig command
-                // look for ipv4 under ethernet connection
                 "http://127.0.0.1",
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
                 "https://sssms-academic-portal-1.onrender.com"));
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin",
-                "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Set-Cookie"));
 
