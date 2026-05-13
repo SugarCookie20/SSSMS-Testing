@@ -12,17 +12,6 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Serves profile photos stored in the dedicated profile_pictures subdirectory.
- * Endpoint: GET /api/photos/profile/{fileName}
- *
- * Separate from ResourceController so academic files and profile photos
- * are served from their respective storage subdirectories.
- *
- * Caching: Responses include Cache-Control (1 day) and ETag headers.
- * Since each upload generates a new UUID filename, a changed photo automatically
- * busts the cache via a different URL — no stale image risk.
- */
 @RestController
 @RequestMapping("/api/photos")
 @RequiredArgsConstructor
