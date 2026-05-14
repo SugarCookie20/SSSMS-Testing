@@ -24,8 +24,6 @@ public class ProfilePhotoController {
             @PathVariable String fileName,
             WebRequest webRequest) {
 
-        // ETag is the filename itself — it's a UUID, unique per upload.
-        // If the client sends If-None-Match matching this, return 304 instantly.
         String eTag = "\"" + fileName + "\"";
         if (webRequest.checkNotModified(eTag)) {
             return ResponseEntity.status(304).build();
