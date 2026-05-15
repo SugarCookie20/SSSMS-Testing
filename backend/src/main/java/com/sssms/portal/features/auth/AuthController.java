@@ -30,7 +30,6 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Inject Profile Repositories to fetch Names
     private final FacultyRepository facultyRepository;
     private final StudentRepository studentRepository;
 
