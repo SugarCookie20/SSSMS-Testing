@@ -31,7 +31,6 @@ public class ProfilePhotoController {
 
         Resource resource = fileStorageService.loadProfilePhotoAsResource(fileName);
 
-        // Determine content type from file extension
         String contentType = "application/octet-stream";
         String lower = fileName.toLowerCase();
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) contentType = "image/jpeg";
