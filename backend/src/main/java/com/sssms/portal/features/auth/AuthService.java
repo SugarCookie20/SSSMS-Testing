@@ -11,11 +11,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-
     public Authentication authenticateSession(AuthenticationRequest request) {
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
