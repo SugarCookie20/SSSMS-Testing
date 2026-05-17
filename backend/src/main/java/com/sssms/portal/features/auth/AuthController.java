@@ -36,7 +36,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request, HttpServletRequest httpRequest) {
 
-        // 1. Authenticate the user
         Authentication authentication = service.authenticateSession(request);
 
         // 2. Set the authentication in the Spring Security Context
