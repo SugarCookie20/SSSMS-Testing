@@ -38,7 +38,6 @@ public class AuthController {
 
         Authentication authentication = service.authenticateSession(request);
 
-        // 2. Set the authentication in the Spring Security Context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // 3. Create a new Session and save the context
