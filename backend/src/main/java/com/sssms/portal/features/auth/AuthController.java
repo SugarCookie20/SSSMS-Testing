@@ -46,7 +46,6 @@ public class AuthController {
         httpRequest.setAttribute("LOGGED_IN_EMAIL", request.getEmail());
         httpRequest.setAttribute("LOGGED_IN_ROLE", authentication.getAuthorities().iterator().next().getAuthority());
 
-        // Spring Boot will automatically append the Set-Cookie: JSESSIONID header
         return ResponseEntity.ok("Session Login successful.");
     }
 
