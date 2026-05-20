@@ -36,20 +36,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request, HttpServletRequest httpRequest) {
 
-        // 1. Authenticate the user
         Authentication authentication = service.authenticateSession(request);
 
-        // 2. Set the authentication in the Spring Security Context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 3. Create a new Session and save the context
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
         httpRequest.setAttribute("LOGGED_IN_EMAIL", request.getEmail());
         httpRequest.setAttribute("LOGGED_IN_ROLE", authentication.getAuthorities().iterator().next().getAuthority());
 
-        // Spring Boot will automatically append the Set-Cookie: JSESSIONID header
         return ResponseEntity.ok("Session Login successful.");
     }
 
