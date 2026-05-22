@@ -51,7 +51,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/photos/profile/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Resource Management
                         .requestMatchers(HttpMethod.POST, "/api/resources/upload").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
 
