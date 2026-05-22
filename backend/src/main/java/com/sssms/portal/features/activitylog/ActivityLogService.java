@@ -58,9 +58,7 @@ public class ActivityLogService {
                 List.of(LogAction.DATA_VIEWED, LogAction.UNKNOWN), cutoff);
     }
 
-    /**
-     * Purge ALL logs older than the given number of days.
-     */
+
     public int purgeAllOldLogs(int olderThanDays) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(olderThanDays);
         return activityLogRepository.deleteByTimestampBefore(cutoff);
