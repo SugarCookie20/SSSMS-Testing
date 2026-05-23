@@ -54,7 +54,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/resources/upload").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
 
-                        // Schedule Management
                         .requestMatchers(HttpMethod.POST, "/api/schedules/upload/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/schedules/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/schedules/status").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
