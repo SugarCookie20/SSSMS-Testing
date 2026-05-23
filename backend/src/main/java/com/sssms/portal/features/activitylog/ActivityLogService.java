@@ -49,9 +49,6 @@ public class ActivityLogService {
         return stats;
     }
 
-    /**
-     * Purge low-value logs (DATA_VIEWED, UNKNOWN) older than the given number of days.
-     */
     public int purgeLowValueLogs(int olderThanDays) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(olderThanDays);
         return activityLogRepository.deleteByActionInAndTimestampBefore(
