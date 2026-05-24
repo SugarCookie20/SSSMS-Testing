@@ -76,8 +76,6 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider());
 
-                // COMMENTED OUT JWT FILTER ADDITION
-                // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
