@@ -71,7 +71,6 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated())
 
-                // --- CHANGED TO IF_REQUIRED FOR SESSION AUTHENTICATION ---
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 .authenticationProvider(authenticationProvider());
