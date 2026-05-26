@@ -26,8 +26,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // COMMENTED OUT JWT FILTER FOR SESSION TEST
-    // private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Bean
@@ -71,13 +69,10 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated())
 
-                // --- CHANGED TO IF_REQUIRED FOR SESSION AUTHENTICATION ---
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 .authenticationProvider(authenticationProvider());
 
-                // COMMENTED OUT JWT FILTER ADDITION
-                // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
