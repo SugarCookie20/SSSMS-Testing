@@ -51,17 +51,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/photos/profile/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Resource Management
                         .requestMatchers(HttpMethod.POST, "/api/resources/upload").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
 
-                        // Schedule Management
                         .requestMatchers(HttpMethod.POST, "/api/schedules/upload/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/schedules/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/schedules/status").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/schedules/student/me").hasAnyAuthority("ROLE_STUDENT", "STUDENT")
 
-                        // Roles
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
                         .requestMatchers("/api/faculty/profile/me").authenticated()
                         .requestMatchers("/api/faculty/**").hasAnyAuthority("ROLE_FACULTY", "FACULTY", "ROLE_ADMIN", "ADMIN")
